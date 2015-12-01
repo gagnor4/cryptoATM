@@ -11,8 +11,8 @@
 Bank::Bank(int p) {
   server = new Server(p);
   keypair = create_RSA();
-  buffer = (char *)malloc(MSG_LEN * sizeof(char));
-  message = (char *)malloc(MSG_LEN * sizeof(char));
+  buffer = new char[MSG_LEN];
+  message = new char[MSG_LEN];
   
   database["Alice"] = new Account(100);
   database["Bob"] = new Account(50);
@@ -22,8 +22,8 @@ Bank::Bank(int p) {
 Bank::~Bank() {
   delete server;
 
-  delete buffer;
-  delete message;
+  delete[] buffer;
+  delete[] message;
   map<string, Account*>::iterator itr;
 
   for (itr = database.begin(); itr != database.end(); ++itr) {

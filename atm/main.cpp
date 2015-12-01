@@ -5,11 +5,35 @@
 #include "atm.h"
 #include "../lib/util.h"
 
+#include <iostream>
+#include <fstream>
+
+#define CARD_LOC "cards/"
+#define PINSTR "PIN:"
+
 using namespace std;
 
 const string msg = "---ATM---\nInput:";
 
-bool validate(string user, int pin) {
+bool validate(string user, int pin, Session** session) {
+  ifstream card(string(CARD_LOC + user + ".card").c_str());
+  if (!card) {
+    cout << "Could not find card file for user" << endl;
+    return false;
+  }
+  string test_pin_str;
+  int test_pin;
+  string line;
+  stringstream* stream;
+  getline(card,line);
+  stream = new stringstream(line);
+  if (!read_string(stream, test_pin_str)) return false;
+  if (test_pin_str != PINSTR) return false;
+  if (!read_positive_int(stream, test_pin)) return false;
+  if (pin != test_pin) return false;
+  delete stream;
+
+  *session = new Session(user);
   return true;
 }
 
@@ -87,6 +111,7 @@ int main(int argc, char *argv[]) {
       }
       else if (choice == "exit") {
         delete session;
+        session = 0;
         break;
       }
       else {
@@ -96,15 +121,17 @@ int main(int argc, char *argv[]) {
     else {
       if (choice == "login") {
         if (!read_string(stream, user)) continue;
+        delete stream;
         cout << "Enter PIN:" << endl;
         getline(cin, input);
         stream = new stringstream(input);
         if (!read_positive_int(stream, amount)) continue;
-        if (validate(user, amount)) {
-          session = new Session(user);
+        if (!validate(user, amount, &session)) {
+          cout << "Invalid PIN" << endl;
+          session = 0;
         }
         else {
-          cout << "Invalid PIN" << endl;
+          cout << "Welcome " << user << endl;
         }
       }
       else if (choice == "balance" || choice == "withdraw" ||
@@ -118,6 +145,10 @@ int main(int argc, char *argv[]) {
         cout << "Invalid input" << endl;
       }
     }
+    delete stream;
   }
+
+  if (stream) delete stream;
+  if (session) delete session;
   return 0;
 }

@@ -8,14 +8,14 @@ Proxy::Proxy(int ip, int op) {
   in = new Server(ip);
   out = new Socket(op);
 
-  buffer = (char *)malloc(MSG_LEN * sizeof(char));
+  buffer = new char[MSG_LEN];
 }
 
 Proxy::~Proxy() {
   delete out;
   delete in;
 
-  delete buffer;
+  delete[] buffer;
 }
 
 // Loop to read from in and write to out, then

@@ -9,8 +9,8 @@ ATM::ATM(int p) {
   socket = new Socket(p);
   keypair = create_RSA();
 
-  buffer = (char *)malloc(MSG_LEN * sizeof(char));
-  message = (char *)malloc(MSG_LEN * sizeof(char));
+  buffer = new char[MSG_LEN];
+  message = new char[MSG_LEN];
 
   connect_to_bank();
 }
@@ -18,8 +18,8 @@ ATM::ATM(int p) {
 ATM::~ATM() {
   delete socket;
 
-  delete buffer;
-  delete message;
+  delete[] buffer;
+  delete[] message;
 }
 
 int ATM::transfer(string from, string to, int amount) {

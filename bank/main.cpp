@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
         cout << "Invalid input" << endl;
       }
     }
+    delete stream;
   }
   return 0;
 }
