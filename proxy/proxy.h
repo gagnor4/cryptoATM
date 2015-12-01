@@ -3,16 +3,17 @@
 
 #include "../lib/util.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 class Proxy {
 public:
   Proxy(int ip, int op);
+  ~Proxy();
   void run();
 private:
+  int handle_message(int fd);
+  
   Server* in;
   Socket* out;
+  char* buffer;
 };
 
 #endif

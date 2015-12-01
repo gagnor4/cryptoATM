@@ -5,10 +5,6 @@
 #include "atm.h"
 #include "../lib/util.h"
 
-#include <stdlib.h>
-#include <iostream>
-#include <sstream>
-
 using namespace std;
 
 const string msg = "---ATM---\nInput:";
@@ -34,15 +30,13 @@ int main(int argc, char *argv[]) {
 
   cout << msg << endl;
   string input, choice, user;
-  int amount;
-  bool valid;
+  int amount, ret;
   stringstream* stream;
   while(1) {
     input = "";
     choice = "";
     user = "";
     amount = 0;
-    valid = false;
     getline(cin, input);
     stream = new stringstream(input);
     if (!read_string(stream, choice)) continue;
@@ -51,32 +45,49 @@ int main(int argc, char *argv[]) {
         cout << "Already logged in as user " << session->user << endl;
       }
       else if (choice == "balance") {
-        cout << "User balance: $" << atm.balance(session->user) << endl;
+        ret = atm.balance(session->user);
+        if (ret >= 0) {
+          cout << "User balance: $" << ret << endl;
+        }
+        else {
+          cout << "Invalid user" << endl;
+        }
       }
       else if (choice == "withdraw") {
         if (!read_positive_int(stream, amount)) continue;
-        valid = atm.withdraw(session->user, amount);
-        if (valid) {
+        ret = atm.withdraw(session->user, amount);
+        if (ret > 0) {
           cout << "Withdrew $" << amount << endl;
         }
+        else if (ret == 0) {
+          cout << "Insufficient funds" << endl;
+        }
         else {
-          cout << "Invalid withdraw" << endl;
+          cout << "Invalid user" << endl;
         }
       }
       else if (choice == "transfer") {
         if (!read_positive_int(stream, amount)) continue;
         if (!read_string(stream, user)) continue;
-        valid = atm.transfer(session->user, user, amount);
-        if (valid) {
+        ret = atm.transfer(session->user, user, amount);
+        if (ret > 0) {
           cout << "Transfered $" << amount << " from " << session->user <<
             " to " << user << endl;
         }
+        else if (ret == 0) {
+          cout << "Insufficient funds" << endl;
+        }
         else {
-          cout << "Invalid transfer" << endl;
+          cout << "Invalid user" << endl;
         }
       }
       else if (choice == "logout") {
         delete session;
+        session = 0;
+      }
+      else if (choice == "exit") {
+        delete session;
+        break;
       }
       else {
         cout << "Invalid input" << endl;
@@ -99,6 +110,9 @@ int main(int argc, char *argv[]) {
       else if (choice == "balance" || choice == "withdraw" ||
                choice == "transfer" || choice == "logout") {
         cout << "Must login to attempt action" << endl;
+      }
+      else if (choice == "exit") {
+        break;
       }
       else {
         cout << "Invalid input" << endl;

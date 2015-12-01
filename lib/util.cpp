@@ -9,9 +9,11 @@ using namespace std;
 // Convenience function for reading string from stream
 bool read_string(stringstream* stream, string& str) {
   if (*stream >> str) {
-    return true;
+    if (str.length() < MAX_STR) {
+      return true;
+    }
   }
-  cout << "Invalid input" << endl;
+  cout << "Invalid string" << endl;
   return false;  
 }
 
@@ -20,7 +22,7 @@ bool read_int(stringstream* stream, int& i) {
   if (*stream >> i) {
     return true;
   }
-  cout << "Invalid input" << endl;
+  cout << "Invalid integer" << endl;
   return false;
 }
 
@@ -31,8 +33,15 @@ bool read_positive_int(stringstream* stream, int& i) {
       return true;
     }
   }
-  cout << "Invalid input" << endl;
+  cout << "Invalid integer" << endl;
   return false;
+}
+
+// Return current time in milliseconds
+long long get_current_time() {
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  return (long long) tp.tv_sec * 1000L + tp.tv_usec / 1000;
 }
 
 // Socket initialization
@@ -58,6 +67,10 @@ Socket::Socket(int p) {
   }
 }
 
+Socket::~Socket() {
+  close(sockfd);
+}
+
 // Write message from buffer of size
 int Socket::writen(char *msg, int size) {
   int n = write(sockfd, msg, size);
@@ -79,7 +92,7 @@ int Socket::readn(char *msg, int size) {
 // Server initialization
 Server::Server(int p) {
   port = p;
-
+  
   struct sockaddr_in addr;
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -98,6 +111,16 @@ Server::Server(int p) {
     return;
   }
   listen(sockfd, 5);
+
+  FD_ZERO(&connections);
+  FD_SET(sockfd, &connections);
+}
+
+Server::~Server() {
+  for (int i=0; i<FD_SETSIZE; ++i) {
+    close(i);
+  }
+  close(sockfd);
 }
 
 // Write buffer of size to client
@@ -118,17 +141,17 @@ int Server::readn(int cli, char *msg, int size) {
   return n;
 }
 
-// Blocking wait until a client connects
-int Server::wait_for_connection() {
-  socklen_t clilen;
-  struct sockaddr_in addr;
-  clilen = sizeof(addr);
-  int newsockfd = accept(sockfd, (struct sockaddr*) &addr, &clilen);
-  if (newsockfd < 0) {
-    perror("Failed to accept");
-    return -1;
-  }
-  return newsockfd;
+int Server::read_buffer(int cli) {
+  memset(buf, 0, MSG_LEN);
+  return readn(cli, buf, MSG_LEN);
+}
+
+fd_set* Server::get_connections() {
+  return &connections;
+}
+
+int Server::get_sockfd() {
+  return sockfd;
 }
 
 // Initialize OpenSSL

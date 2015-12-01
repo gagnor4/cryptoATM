@@ -3,10 +3,8 @@
 */
 
 #include "bank.h"
+#include "../atm/atm.h"
 #include "../lib/util.h"
-
-#include <stdlib.h>
-#include <iostream>
 
 using namespace std;
 
@@ -23,55 +21,57 @@ int main(int argc, char *argv[]) {
     cout << "Invalid port" << endl;
     return 1;
   }
-
+  
   pid_t pid;
   pid = fork();
 
-  if (pid == -1) {
+  if (pid < 0) {
     perror("Fork failed");
     return 1;
   }
 
   if (pid == 0) {
-    Bank bank(port);
+    Bank bank(port); 
     bank.run();
   }
   else {
-    Bank bank(port);
+    sleep(1);
+    ATM atm(port);
     cout << msg << endl;
     string input, choice, user;
-    int amount;
-    bool valid;
+    int amount, ret;
     stringstream* stream;
     while(1) {
       input = "";
       choice = "";
       user = "";
       amount = 0;
-      valid = false;
       getline(cin, input);
       stream = new stringstream(input);
       // Read choice
       if (!read_string(stream, choice)) continue;
-    
       if (choice == "deposit") {
         if (!read_string(stream, user)) continue;
         if (!read_positive_int(stream, amount)) continue;
-        if (bank.deposit(user, amount)) {
+        ret = atm.withdraw(user, 0-amount);
+        if (ret > 0) {
           cout << "Deposited $" << amount << " to " << user << endl;
         }
+        else if (ret == 0) {
+          cout << "Insufficient funds" << endl;
+        }
         else {
-          cout << "Invalid deposit" << endl;
+          cout << "Invalid user" << endl;
         }
       }
       else if (choice == "balance") {
         if (!read_string(stream, user)) continue;
-        int bal = bank.balance(user);
+        int bal = atm.balance(user);
         if (bal >= 0) {
           cout << "Balance: $" << bal << endl;
         }
         else {
-          cout << "Unknown user" << endl;
+          cout << "Invalid user" << endl;
         }
       }
       else if (choice == "exit") {

@@ -14,6 +14,7 @@ public:
   int get_money() {return money;}
   void set_money(int m) {money = m;}
   void add_money(int m) {money += m;}
+  bool more_than(int m) {return (m >= 0 || money + m >= 0);}
 private:
   int money;
 };
@@ -21,18 +22,25 @@ private:
 class Bank {
 public:
   Bank(int p);
-  bool deposit(string user, int amount);
-  int balance(string user);
+  ~Bank();
   void run();
 private:
   Account* find_user(string user);
-  int decode_message(char *buffer);
-  void encode_and_send(int msg);
+
+  int deposit(string user, int amount);
+  int balance(string user);
+
+  int handle_message(int fd);
+  int encrypt_message(char* from, char* to);
+  int decrypt_message(char* from, char* to);
+  int read_message(char* buf);
+  int create_message(char* buf, int response);
   
   Server* server;
-  vector<int> connections;
-  map<string, Account*> database;
   RSA* keypair;
+  char* buffer;
+  char* message;
+  map<string, Account*> database;
 };
 
 #endif
