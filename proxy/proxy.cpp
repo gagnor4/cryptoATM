@@ -3,11 +3,14 @@
 */
 #include "proxy.h"
 
+// Initialize proxy
 Proxy::Proxy(int ip, int op) {
   in = new Server(ip);
   out = new Socket(op);
 }
 
+// Loop to read from in and write to out, then
+// read from out and write to in for bidirectional traffic
 void Proxy::run() {
   int bytes = 0;
   int cli = in->wait_for_connection();

@@ -5,20 +5,31 @@
 #include <sstream>
 #include <unistd.h>
 #include <stdio.h>
+
+// Net
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
+// Crypto
+#include <openssl/rsa.h>
+#include <openssl/rand.h>
+
 using namespace std;
 
 #define MSG_LEN 512
+#define PADDING RSA_PKCS1_PADDING
+#define KEY_LEN 1024
+#define KEY_EXP 65537
 
+// Convenience
 bool read_string(stringstream* stream, string& str);
 bool read_int(stringstream* stream, int& i);
 bool read_positive_int(stringstream* stream, int& i);
 
+// Networking
 class Socket {
  public:
   Socket(int p);
@@ -39,5 +50,11 @@ class Server {
   int port;
   int sockfd;
 };
+
+// Crypto
+void initialize_crypto();
+RSA* create_RSA();
+int public_encrypt(unsigned char* from, unsigned char* to, RSA* rsa);
+int private_decrypt(unsigned char* from, unsigned char* to, RSA* rsa);
 
 #endif

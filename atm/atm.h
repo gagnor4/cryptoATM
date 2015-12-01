@@ -18,7 +18,9 @@ class ATM {
   bool withdraw(string user, int amount);
   int balance(string user);
  private:
+  void connect_to_bank();
   Socket* socket;
+  RSA* keypair;
 };
 
 #endif

@@ -23,50 +23,63 @@ int main(int argc, char *argv[]) {
     cout << "Invalid port" << endl;
     return 1;
   }
-  
-  Bank bank(port);
-  
-  
 
-  cout << msg << endl;
-  string input, choice, user;
-  int amount;
-  bool valid;
-  stringstream* stream;
-  while(1) {
-    input = "";
-    choice = "";
-    user = "";
-    amount = 0;
-    valid = false;
-    getline(cin, input);
-    stream = new stringstream(input);
-    if (!read_string(stream, choice)) continue;
-    if (choice == "deposit") {
-      if (!read_string(stream, user)) continue;
-      if (!read_positive_int(stream, amount)) continue;
-      if (bank.deposit(user, amount)) {
-        cout << "Deposited $" << amount << " to " << user << endl;
+  pid_t pid;
+  pid = fork();
+
+  if (pid == -1) {
+    perror("Fork failed");
+    return 1;
+  }
+
+  if (pid == 0) {
+    Bank bank(port);
+    bank.run();
+  }
+  else {
+    Bank bank(port);
+    cout << msg << endl;
+    string input, choice, user;
+    int amount;
+    bool valid;
+    stringstream* stream;
+    while(1) {
+      input = "";
+      choice = "";
+      user = "";
+      amount = 0;
+      valid = false;
+      getline(cin, input);
+      stream = new stringstream(input);
+      // Read choice
+      if (!read_string(stream, choice)) continue;
+    
+      if (choice == "deposit") {
+        if (!read_string(stream, user)) continue;
+        if (!read_positive_int(stream, amount)) continue;
+        if (bank.deposit(user, amount)) {
+          cout << "Deposited $" << amount << " to " << user << endl;
+        }
+        else {
+          cout << "Invalid deposit" << endl;
+        }
+      }
+      else if (choice == "balance") {
+        if (!read_string(stream, user)) continue;
+        int bal = bank.balance(user);
+        if (bal >= 0) {
+          cout << "Balance: $" << bal << endl;
+        }
+        else {
+          cout << "Unknown user" << endl;
+        }
+      }
+      else if (choice == "exit") {
+        break;
       }
       else {
-        cout << "Invalid deposit" << endl;
+        cout << "Invalid input" << endl;
       }
-    }
-    else if (choice == "balance") {
-      if (!read_string(stream, user)) continue;
-      int bal = bank.balance(user);
-      if (bal >= 0) {
-        cout << "Balance: $" << bal << endl;
-      }
-      else {
-        cout << "Unknown user" << endl;
-      }
-    }
-    else if (choice == "exit") {
-      break;
-    }
-    else {
-      cout << "Invalid input" << endl;
     }
   }
   return 0;

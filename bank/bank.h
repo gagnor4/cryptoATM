@@ -3,6 +3,7 @@
 
 #include "../lib/util.h"
 
+#include <vector>
 #include <map>
 
 using namespace std;
@@ -22,11 +23,16 @@ public:
   Bank(int p);
   bool deposit(string user, int amount);
   int balance(string user);
+  void run();
 private:
   Account* find_user(string user);
+  int decode_message(char *buffer);
+  void encode_and_send(int msg);
   
   Server* server;
+  vector<int> connections;
   map<string, Account*> database;
+  RSA* keypair;
 };
 
 #endif

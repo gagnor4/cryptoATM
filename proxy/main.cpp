@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
 
   Proxy proxy(iport, oport);
 
+  // Forward traffic back and forth
   proxy.run();
   
   return 0;

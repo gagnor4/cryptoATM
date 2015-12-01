@@ -6,6 +6,7 @@
 
 using namespace std;
 
+// Convenience function for reading string from stream
 bool read_string(stringstream* stream, string& str) {
   if (*stream >> str) {
     return true;
@@ -14,6 +15,7 @@ bool read_string(stringstream* stream, string& str) {
   return false;  
 }
 
+// Convenience function for reading int from stream
 bool read_int(stringstream* stream, int& i) {
   if (*stream >> i) {
     return true;
@@ -22,6 +24,7 @@ bool read_int(stringstream* stream, int& i) {
   return false;
 }
 
+// Convenience function for reading positive int from stream
 bool read_positive_int(stringstream* stream, int& i) {
   if (*stream >> i) {
     if (i > 0) {
@@ -32,7 +35,7 @@ bool read_positive_int(stringstream* stream, int& i) {
   return false;
 }
 
-
+// Socket initialization
 Socket::Socket(int p) {
   port = p;
 
@@ -55,6 +58,7 @@ Socket::Socket(int p) {
   }
 }
 
+// Write message from buffer of size
 int Socket::writen(char *msg, int size) {
   int n = write(sockfd, msg, size);
   if (n != size) {
@@ -63,6 +67,7 @@ int Socket::writen(char *msg, int size) {
   return n;
 }
 
+// Read message to buffer of size
 int Socket::readn(char *msg, int size) {
   int n = read(sockfd, msg, size);
   if (n != size) {
@@ -71,6 +76,7 @@ int Socket::readn(char *msg, int size) {
   return n;
 }
 
+// Server initialization
 Server::Server(int p) {
   port = p;
 
@@ -94,6 +100,7 @@ Server::Server(int p) {
   listen(sockfd, 5);
 }
 
+// Write buffer of size to client
 int Server::writen(int cli, char *msg, int size) {
   int n = write(cli, msg, size);
   if (n != size) {
@@ -102,6 +109,7 @@ int Server::writen(int cli, char *msg, int size) {
   return n;
 }
 
+// Read buffer of size from client
 int Server::readn(int cli, char *msg, int size) {
   int n = read(cli, msg, size);
   if (n != size) {
@@ -110,6 +118,7 @@ int Server::readn(int cli, char *msg, int size) {
   return n;
 }
 
+// Blocking wait until a client connects
 int Server::wait_for_connection() {
   socklen_t clilen;
   struct sockaddr_in addr;
@@ -120,4 +129,25 @@ int Server::wait_for_connection() {
     return -1;
   }
   return newsockfd;
+}
+
+// Initialize OpenSSL
+void initialize_crypto() {
+  unsigned char buf[2];
+  RAND_bytes(buf, 2);
+}
+
+// Create RSA key pair
+RSA* create_RSA() {
+  return RSA_generate_key(KEY_LEN, KEY_EXP, 0, 0);
+}
+
+// Encrypt using public key
+int public_encrypt(unsigned char* from, unsigned char* to, RSA* rsa) {
+  return RSA_public_encrypt(MSG_LEN, from, to, rsa, PADDING);
+}
+
+// Decrypt using private key
+int private_decrypt(unsigned char* from, unsigned char* to, RSA* rsa) {
+  return RSA_private_decrypt(MSG_LEN, from, to, rsa, PADDING);
 }
