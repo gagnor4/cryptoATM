@@ -10,7 +10,14 @@
 // Initialize bank
 Bank::Bank(int p) {
   server = new Server(p);
-  keypair = create_RSA();
+
+  LoadPrivateKey("bank/bank-private.key", bankkey);
+
+  AutoSeededRandomPool rnd;
+  if (!bankkey.Validate(rnd, 3)) {
+    cout << "Could not validate key" << endl;
+  }
+  
   buffer = new char[MSG_LEN];
   message = new char[MSG_LEN];
   
@@ -96,6 +103,7 @@ void Bank::run() {
             return;
           }
           FD_SET(clisockfd, connections);
+          //new_client(clisockfd);
         }
         // Data arriving on already connected socket
         else {
@@ -109,14 +117,21 @@ void Bank::run() {
   }
 }
 
+/*
+void Bank::new_client(int fd) {
+  
+}*/
+
 int Bank::handle_message(int fd) {
   memset(message, 0, MSG_LEN);
   int bytes = server->readn(fd, message, MSG_LEN);
+  print_buffer(message);
   if (bytes != MSG_LEN) {
     cout << "Bad read" << endl;
     return -1;
   }
   decrypt_message(message, buffer);
+  print_buffer(buffer);
   int response = read_message(buffer);
   create_message(buffer, response);
   encrypt_message(buffer, message);
@@ -136,8 +151,10 @@ int Bank::encrypt_message(char* from, char* to) {
 }
 
 int Bank::decrypt_message(char* from, char* to) {
-  memset(to, 0, MSG_LEN);
-  memcpy(to, from, MSG_LEN * sizeof(char));
+  //memset(to, 0, MSG_LEN);
+  //memcpy(to, from, MSG_LEN * sizeof(char));
+  //return true;
+  decrypt(from, to, bankkey);
   return true;
 }
 
@@ -153,7 +170,8 @@ int Bank::read_message(char* buf) {
   unsigned int userlen;
   memcpy(&userlen, &buf[offset], sizeof(userlen));
   offset += sizeof(userlen);
-  string user(&buf[offset], userlen);
+  string user("", userlen);
+  memcpy(&user, &buf[offset], userlen);
   offset += sizeof(user);
   if (type) {
     int amount;

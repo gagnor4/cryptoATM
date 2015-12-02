@@ -37,7 +37,7 @@ private:
   int create_message(char* buf, int response);
   
   Server* server;
-  RSA* keypair;
+  RSA::PrivateKey bankkey;
   char* buffer;
   char* message;
   map<string, Account*> database;

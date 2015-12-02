@@ -16,16 +16,9 @@
 #include <netdb.h>
 
 // Crypto
-#include <openssl/rsa.h>
-#include <openssl/rand.h>
+#include "crypto.h"
 
 using namespace std;
-
-#define MSG_LEN 512
-#define MAX_STR (MSG_LEN/2)
-#define PADDING RSA_PKCS1_PADDING
-#define KEY_LEN 1024
-#define KEY_EXP 65537
 
 // Convenience
 bool read_string(stringstream* stream, string& str);
@@ -33,6 +26,8 @@ bool read_int(stringstream* stream, int& i);
 bool read_positive_int(stringstream* stream, int& i);
 
 long long get_current_time();
+
+void print_buffer(char* buf);
 
 // Networking
 class Socket {
@@ -59,13 +54,17 @@ class Server {
   int port;
   int sockfd;
   fd_set connections;
-  char* buf;
 };
 
-// Crypto
-void initialize_crypto();
-RSA* create_RSA();
-int public_encrypt(unsigned char* from, unsigned char* to, RSA* rsa);
-int private_decrypt(unsigned char* from, unsigned char* to, RSA* rsa);
+class User {
+ public:
+  User(string _name, Integer n, Integer e, Integer d);
+  RSA::PrivateKey get_private_key();
+  RSA::PublicKey get_public_key();
+ private:
+  string name;
+  RSA::PrivateKey key;
+  RSA::PublicKey pub;
+}
 
 #endif

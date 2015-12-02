@@ -3,16 +3,19 @@
 */
 #include "atm.h"
 
-#include <string.h>
-
 ATM::ATM(int p) {
   socket = new Socket(p);
-  keypair = create_RSA();
+  
+  AutoSeededRandomPool rnd;
+  atmkey.GenerateRandomWithKeySize(rnd, KEY_LEN);
+  atmpub = RSA::PublicKey(atmkey);
 
+  LoadPublicKey("atm/bank-public.key", bankpub);
+  
   buffer = new char[MSG_LEN];
   message = new char[MSG_LEN];
 
-  connect_to_bank();
+  //connect_to_bank();
 }
 
 ATM::~ATM() {
@@ -53,7 +56,9 @@ int ATM::withdraw(string user, int amount) {
 
 int ATM::balance(string user) {
   create_message(false, user, 0, buffer);
+  print_buffer(buffer);
   encrypt_message(buffer, message);
+  print_buffer(message);
   send_message();
   wait_for_message();
   decrypt_message(message, buffer);
@@ -62,7 +67,21 @@ int ATM::balance(string user) {
 
 
 void ATM::connect_to_bank() {
+  create_query(message);
+  send_message();
   
+}
+
+int ATM::create_query(char* buf) {
+  memset(buf, 0, MSG_LEN);
+  long long time = get_current_time();
+  int offset = 0;
+  memcpy(&buf[offset], &time, sizeof(time));
+  offset += sizeof(time);
+  bool query = true;
+  memcpy(&buf[offset], &query, sizeof(query));
+  offset += sizeof(query);
+  return offset;
 }
 
 int ATM::create_message(bool type, string user, int amount, char* buf) {
@@ -70,8 +89,11 @@ int ATM::create_message(bool type, string user, int amount, char* buf) {
   unsigned int userlen = user.length();
   int offset = 0;
   long long time = get_current_time();
+  bool query = false;
   memcpy(&buf[offset], &time, sizeof(time));
   offset += sizeof(time);
+  memcpy(&buf[offset], &query, sizeof(query));
+  offset += sizeof(query);
   memcpy(&buf[offset], &type, sizeof(type));
   offset += sizeof(type);
   memcpy(&buf[offset], &userlen, sizeof(userlen));
@@ -93,8 +115,10 @@ int ATM::read_message(char* buf) {
 }
 
 int ATM::encrypt_message(char* from, char* to) {
-  memset(to, 0, MSG_LEN);
-  memcpy(to, from, MSG_LEN * sizeof(char));
+  //memset(to, 0, MSG_LEN);
+  //memcpy(to, from, MSG_LEN * sizeof(char));
+  //return true;
+  encrypt(from, to, bankpub);
   return true;
 }
 

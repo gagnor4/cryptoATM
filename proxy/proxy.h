@@ -3,6 +3,8 @@
 
 #include "../lib/util.h"
 
+#include <sys/ioctl.h>
+
 class Proxy {
 public:
   Proxy(int ip, int op);

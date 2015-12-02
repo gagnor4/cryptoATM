@@ -20,6 +20,7 @@ class ATM {
   int balance(string user);
  private:
   void connect_to_bank();
+  int create_query(char* buf);
   int create_message(bool type, string user, int amount, char* buf);
   int read_message(char* buf);
   int encrypt_message(char* from, char* to);
@@ -28,7 +29,10 @@ class ATM {
   bool wait_for_message();
 
   Socket* socket;
-  RSA* keypair;
+  RSA::PrivateKey atmkey;
+  RSA::PublicKey atmpub;
+  RSA::PublicKey bankpub;
+  RSA::PrivateKey bankkey;
   char* buffer;
   char* message;
 };

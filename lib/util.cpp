@@ -44,6 +44,13 @@ long long get_current_time() {
   return (long long) tp.tv_sec * 1000L + tp.tv_usec / 1000;
 }
 
+void print_buffer(char* buf) {
+  for (int i=0; i<MSG_LEN; ++i) {
+    cout << int(buf[i]) << " ";
+  }
+  cout << endl;
+}
+
 // Socket initialization
 Socket::Socket(int p) {
   port = p;
@@ -141,11 +148,6 @@ int Server::readn(int cli, char *msg, int size) {
   return n;
 }
 
-int Server::read_buffer(int cli) {
-  memset(buf, 0, MSG_LEN);
-  return readn(cli, buf, MSG_LEN);
-}
-
 fd_set* Server::get_connections() {
   return &connections;
 }
@@ -154,23 +156,17 @@ int Server::get_sockfd() {
   return sockfd;
 }
 
-// Initialize OpenSSL
-void initialize_crypto() {
-  unsigned char buf[2];
-  RAND_bytes(buf, 2);
+
+User::User(string _name, Integer n, Integer e, Integer d) {
+  name = _name;
+  key.Initialize(n, d, e);
+  pub.Initialize(n, d);
 }
 
-// Create RSA key pair
-RSA* create_RSA() {
-  return RSA_generate_key(KEY_LEN, KEY_EXP, 0, 0);
+RSA::PrivateKey User::get_private_key() {
+  return key;
 }
 
-// Encrypt using public key
-int public_encrypt(unsigned char* from, unsigned char* to, RSA* rsa) {
-  return RSA_public_encrypt(MSG_LEN, from, to, rsa, PADDING);
-}
-
-// Decrypt using private key
-int private_decrypt(unsigned char* from, unsigned char* to, RSA* rsa) {
-  return RSA_private_decrypt(MSG_LEN, from, to, rsa, PADDING);
+RSA::PublicKey User::get_public_key() {
+  return pub;
 }
