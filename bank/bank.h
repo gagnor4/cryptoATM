@@ -13,8 +13,11 @@ public:
   Account(int m) {money = m;}
   int get_money() {return money;}
   void set_money(int m) {money = m;}
-  void add_money(int m) {money += m;}
-  bool more_than(int m) {return (m >= 0 || money + m >= 0);}
+  int add_money(int m) {money += m; return money;}
+  bool more_than(int m);
+  
+  byte key[AES::DEFAULT_KEYLENGTH];
+  byte iv[AES::BLOCKSIZE];
 private:
   int money;
 };
@@ -25,22 +28,33 @@ public:
   ~Bank();
   void run();
 private:
-  Account* find_user(string user);
+  void new_atm(int fd);
+  void remove_atm(int fd);
+  Session* find_atm_session(int fd);
+  bool authenticate_atm(int fd, char* from, char* to);
 
-  int deposit(string user, int amount);
-  int balance(string user);
+  Account* find_account(string name);
+  bool authenticate_user(Session* session, char* from, char* to);
+  
+  int read(int fd);
+  void read_header(Session* session, char* from, char* to);
+  void read_body(Session* session, int offset, char* from ,char* to);
+  bool valid_timestamp(Session* s, long long t);
 
-  int handle_message(int fd);
-  int encrypt_message(char* from, char* to);
-  int decrypt_message(char* from, char* to);
-  int read_message(char* buf);
-  int create_message(char* buf, int response);
+  void create_message(int response, char* buf);
+  
+  int transaction(string name, int amount);
+  bool valid_timestamp(long long t);
+
+  bool send_message(int fd, char* buf);
+  bool recv_message(int fd, char* buf);
   
   Server* server;
   RSA::PrivateKey bankkey;
   char* buffer;
   char* message;
   map<string, Account*> database;
+  map<int, Session*> atmkeyring;
 };
 
 #endif

@@ -2,11 +2,13 @@
 #define UTIL_H
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
+#include <ctype.h>
 
 // Net
 #include <sys/types.h>
@@ -20,13 +22,15 @@
 
 using namespace std;
 
-// Convenience
+// Stream reading functions
 bool read_string(stringstream* stream, string& str);
 bool read_int(stringstream* stream, int& i);
 bool read_positive_int(stringstream* stream, int& i);
+bool read_Integer(stringstream* stream, Integer& i);
 
 long long get_current_time();
 
+void pad(int amount, char* buf);
 void print_buffer(char* buf);
 
 // Networking
@@ -56,15 +60,12 @@ class Server {
   fd_set connections;
 };
 
-class User {
- public:
-  User(string _name, Integer n, Integer e, Integer d);
-  RSA::PrivateKey get_private_key();
-  RSA::PublicKey get_public_key();
- private:
-  string name;
-  RSA::PrivateKey key;
+struct Session {
+  byte key[AES::DEFAULT_KEYLENGTH];
+  byte iv[AES::BLOCKSIZE];
   RSA::PublicKey pub;
-}
+  string auth;
+  long long time;
+};
 
 #endif

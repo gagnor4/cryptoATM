@@ -37,11 +37,34 @@ bool read_positive_int(stringstream* stream, int& i) {
   return false;
 }
 
+bool read_Integer(stringstream* stream, Integer& i) {
+  char c;
+  string s;
+  while (*stream >> c) {
+    if (isdigit(c)) {
+      s.append(1, c);
+    }
+    else if (c == '.') {
+      break;
+    }
+    else {
+      return false; 
+    }
+  }
+  i = Integer(s.data());
+  return true;
+}
+
 // Return current time in milliseconds
 long long get_current_time() {
   struct timeval tp;
   gettimeofday(&tp, NULL);
   return (long long) tp.tv_sec * 1000L + tp.tv_usec / 1000;
+}
+
+void pad(int amount, char* buf) {
+  AutoSeededRandomPool rnd;
+  rnd.GenerateBlock((byte*)&buf[amount], MSG_LEN - amount);
 }
 
 void print_buffer(char* buf) {
@@ -82,16 +105,17 @@ Socket::~Socket() {
 int Socket::writen(char *msg, int size) {
   int n = write(sockfd, msg, size);
   if (n != size) {
-    perror("Failed to write");
+    perror("Socket write");
   }
   return n;
 }
 
 // Read message to buffer of size
 int Socket::readn(char *msg, int size) {
+  memset(msg, 0, size);
   int n = read(sockfd, msg, size);
   if (n != size) {
-    perror("Failed to read");
+    perror("Socket read");
   }
   return n;
 }
@@ -134,16 +158,17 @@ Server::~Server() {
 int Server::writen(int cli, char *msg, int size) {
   int n = write(cli, msg, size);
   if (n != size) {
-    perror("Failed to write");
+    perror("Server write");
   }
   return n;
 }
 
 // Read buffer of size from client
 int Server::readn(int cli, char *msg, int size) {
+  memset(msg, 0, size);
   int n = read(cli, msg, size);
   if (n != size) {
-    perror("Failed to read");
+    perror("Server read");
   }
   return n;
 }
@@ -154,19 +179,4 @@ fd_set* Server::get_connections() {
 
 int Server::get_sockfd() {
   return sockfd;
-}
-
-
-User::User(string _name, Integer n, Integer e, Integer d) {
-  name = _name;
-  key.Initialize(n, d, e);
-  pub.Initialize(n, d);
-}
-
-RSA::PrivateKey User::get_private_key() {
-  return key;
-}
-
-RSA::PublicKey User::get_public_key() {
-  return pub;
 }

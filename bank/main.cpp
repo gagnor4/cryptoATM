@@ -53,26 +53,27 @@ int main(int argc, char *argv[]) {
       if (choice == "deposit") {
         if (!read_string(stream, user)) continue;
         if (!read_positive_int(stream, amount)) continue;
-        ret = atm.withdraw(user, 0-amount);
-        if (ret > 0) {
+        atm.login(user);
+        ret = atm.withdraw(0-amount);
+        if (ret >= 0) {
           cout << "Deposited $" << amount << " to " << user << endl;
         }
-        else if (ret == 0) {
-          cout << "Insufficient funds" << endl;
-        }
         else {
-          cout << "Invalid user" << endl;
+          cout << "Invalid command" << endl;
         }
+        atm.logout();
       }
       else if (choice == "balance") {
         if (!read_string(stream, user)) continue;
-        int bal = atm.balance(user);
+        atm.login(user);
+        int bal = atm.balance();
         if (bal >= 0) {
           cout << "Balance: $" << bal << endl;
         }
         else {
-          cout << "Invalid user" << endl;
+          cout << "Invalid command" << endl;
         }
+        atm.logout();
       }
       else if (choice == "exit") {
         break;

@@ -21,15 +21,16 @@ Proxy::~Proxy() {
 // Loop to read from in and write to out, then
 // read from out and write to in for bidirectional traffic
 void Proxy::run() {
+  cout << "Started" << endl;
   socklen_t clilen;
   struct sockaddr_in addr;
   int i;
   
   fd_set read_connections;
-  fd_set* connections = in->get_connections();
+  fd_set connections = *in->get_connections();
   while (1) {
     // Block until input arrives on sockets
-    read_connections = *connections;
+    read_connections = connections;
     if (select(FD_SETSIZE, &read_connections, NULL, NULL, NULL) < 0) {
       perror("Could not select connection");
       return;
@@ -47,13 +48,13 @@ void Proxy::run() {
             perror("Could not accept");
             return;
           }
-          FD_SET(clisockfd, connections);
+          FD_SET(clisockfd, &connections);
         }
         // Data arriving on already connected socket
         else {
           if (handle_message(i) < 0) {
             close(i);
-            FD_CLR(i, connections);
+            FD_CLR(i, &connections);
           }
         }
       }
@@ -64,23 +65,23 @@ void Proxy::run() {
 int Proxy::handle_message(int cli) {
   memset(buffer, 0, MSG_LEN);
   int bytes = in->readn(cli, buffer, MSG_LEN);
-  if (bytes != MSG_LEN) {
+  if (bytes < 0) {
     cout << "Bad client read" << endl;
     return -1;
   }
   bytes = out->writen(buffer, MSG_LEN);
-  if (bytes != MSG_LEN) {
+  if (bytes < 0) {
     cout << "Bad server write" << endl;
     return -1;
   }
   memset(buffer, 0, MSG_LEN);
   bytes = out->readn(buffer, MSG_LEN);
-  if (bytes != MSG_LEN) {
+  if (bytes < 0) {
     cout << "Bad server read" << endl;
     return -1;
   }
   bytes = in->writen(cli, buffer, MSG_LEN);
-  if (bytes != MSG_LEN) {
+  if (bytes < 0) {
     cout << "Bad client write" << endl;
     return -1;
   }
